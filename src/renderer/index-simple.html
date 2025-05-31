@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Frame Evolve - Test</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #0f0f0f;
+            color: #ffffff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+        }
+        
+        .logo {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+            border-radius: 16px;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            font-weight: bold;
+        }
+        
+        h1 {
+            font-size: 48px;
+            font-weight: 700;
+            margin-bottom: 12px;
+            background: linear-gradient(135deg, #ffffff, #a1a1aa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        p {
+            font-size: 18px;
+            color: #a1a1aa;
+            margin-bottom: 32px;
+        }
+        
+        .status {
+            padding: 12px 24px;
+            background: #10b981;
+            color: white;
+            border-radius: 8px;
+            font-weight: 500;
+        }
+        
+        .controls {
+            position: fixed;
+            top: 0;
+            right: 0;
+            display: flex;
+            z-index: 1000;
+        }
+        
+        .control-btn {
+            width: 40px;
+            height: 40px;
+            background: transparent;
+            border: none;
+            color: #a1a1aa;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            -webkit-app-region: no-drag;
+        }
+        
+        .control-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: #ffffff;
+        }
+        
+        .control-btn.close:hover {
+            background: #ef4444;
+        }
+        
+        body {
+            -webkit-app-region: drag;
+        }
+        
+        .content {
+            -webkit-app-region: no-drag;
+        }
+    </style>
+</head>
+<body>
+    <div class="controls">
+        <button class="control-btn" id="minimize">−</button>
+        <button class="control-btn" id="maximize">□</button>
+        <button class="control-btn close" id="close">×</button>
+    </div>
+    
+    <div class="content">
+        <div class="logo">FE</div>
+        <h1>Frame Evolve</h1>
+        <p>Professional Video Upscaler & Enhancer</p>
+        <div class="status">✅ Application Running Successfully!</div>
+    </div>
+
+    <script>
+        console.log('Frame Evolve simple test loaded');
+        
+        // Window controls
+        document.getElementById('minimize')?.addEventListener('click', () => {
+            if (window.electronAPI) {
+                window.electronAPI.window.minimize();
+            }
+        });
+
+        document.getElementById('maximize')?.addEventListener('click', () => {
+            if (window.electronAPI) {
+                window.electronAPI.window.maximize();
+            }
+        });
+
+        document.getElementById('close')?.addEventListener('click', () => {
+            if (window.electronAPI) {
+                window.electronAPI.window.close();
+            }
+        });
+        
+        // Test preload
+        if (window.electronAPI) {
+            console.log('✅ Electron API available');
+        } else {
+            console.log('❌ Electron API not available');
+        }
+    </script>
+</body>
+</html>

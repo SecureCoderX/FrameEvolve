@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline';">
+    <title>Frame Evolve</title>
+    <link rel="stylesheet" href="styles/main.css">
+    <link rel="stylesheet" href="styles/components.css">
+</head>
+<body>
+    <!-- Custom Title Bar -->
+    <div class="title-bar">
+        <div class="title-bar-left">
+            <div class="app-icon"></div>
+            <span class="app-title">Frame Evolve</span>
+        </div>
+        <div class="title-bar-right">
+            <button class="title-bar-btn" id="minimize-btn" title="Minimize">
+                <svg width="12" height="12" viewBox="0 0 12 12">
+                    <rect x="0" y="5" width="12" height="2"/>
+                </svg>
+            </button>
+            <button class="title-bar-btn" id="maximize-btn" title="Maximize">
+                <svg width="12" height="12" viewBox="0 0 12 12">
+                    <rect x="1" y="1" width="10" height="10" fill="none" stroke="currentColor" stroke-width="1"/>
+                </svg>
+            </button>
+            <button class="title-bar-btn close-btn" id="close-btn" title="Close">
+                <svg width="12" height="12" viewBox="0 0 12 12">
+                    <path d="M1,1 L11,11 M11,1 L1,11" stroke="currentColor" stroke-width="1"/>
+                </svg>
+            </button>
+        </div>
+    </div>
+
+    <!-- Main Application Content -->
+    <div class="app-container">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <nav class="nav-menu">
+                <button class="nav-item active" data-tab="enhance">
+                    <svg class="nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <path d="M3 3v18h18V3H3zm16 16H5V5h14v14z"/>
+                        <path d="M8 12l2 2 4-4"/>
+                    </svg>
+                    <span>Enhance</span>
+                </button>
+                <button class="nav-item" data-tab="settings">
+                    <svg class="nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <circle cx="12" cy="12" r="3"/>
+                        <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/>
+                    </svg>
+                    <span>Settings</span>
+                </button>
+                <button class="nav-item" data-tab="about">
+                    <svg class="nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <circle cx="12" cy="12" r="10"/>
+                        <path d="M12 16v-4"/>
+                        <path d="M12 8h.01"/>
+                    </svg>
+                    <span>About</span>
+                </button>
+            </nav>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <!-- Enhance Tab -->
+            <div class="tab-content active" id="enhance-tab">
+                <div class="content-header">
+                    <h1>Video Enhancement</h1>
+                    <p>Upload and enhance your videos with AI-powered upscaling</p>
+                </div>
+
+                <!-- File Upload Area -->
+                <div class="upload-section">
+                    <div class="upload-area" id="upload-area">
+                        <div class="upload-icon">
+                            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+                                <polyline points="14,2 14,8 20,8"/>
+                                <line x1="16" y1="13" x2="8" y2="13"/>
+                                <line x1="16" y1="17" x2="8" y2="17"/>
+                                <polyline points="10,9 9,9 8,9"/>
+                            </svg>
+                        </div>
+                        <h3>Drop your video here</h3>
+                        <p>or <button class="link-btn" id="browse-btn">browse files</button></p>
+                        <div class="supported-formats">
+                            Supports MP4, AVI, MOV, MKV, WMV, FLV, WebM
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Video Preview and Controls -->
+                <div class="video-section hidden" id="video-section">
+                    <div class="video-preview-container">
+                        <video id="video-preview" controls></video>
+                        <div class="video-info" id="video-info">
+                            <!-- Video information will be populated here -->
+                        </div>
+                    </div>
+
+                    <!-- Enhancement Options -->
+                    <div class="enhancement-options">
+                        <h3>Enhancement Settings</h3>
+                        
+                        <div class="option-group">
+                            <label for="scale-factor">Upscale Factor</label>
+                            <select id="scale-factor">
+                                <option value="2">2x (Double)</option>
+                                <option value="3">3x (Triple)</option>
+                                <option value="4" selected>4x (Quadruple)</option>
+                            </select>
+                        </div>
+
+                        <div class="option-group">
+                            <label for="enhancement-mode">Enhancement Mode</label>
+                            <select id="enhancement-mode">
+                                <option value="standard">Standard</option>
+                                <option value="sharp" selected>Sharp & Clear</option>
+                                <option value="smooth">Smooth & Natural</option>
+                                <option value="anime">Anime/Animation</option>
+                            </select>
+                        </div>
+
+                        <div class="option-group">
+                            <label for="noise-reduction">Noise Reduction</label>
+                            <input type="range" id="noise-reduction" min="0" max="100" value="50">
+                            <span class="range-value" id="noise-value">50%</span>
+                        </div>
+
+                        <div class="option-group">
+                            <label for="output-quality">Output Quality</label>
+                            <select id="output-quality">
+                                <option value="high">High</option>
+                                <option value="ultra" selected>Ultra</option>
+                                <option value="lossless">Lossless</option>
+                            </select>
+                        </div>
+
+                        <!-- Process Button -->
+                        <button class="process-btn" id="process-btn">
+                            <span class="btn-text">Start Enhancement</span>
+                            <svg class="btn-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                <polygon points="5,3 19,12 5,21 5,3"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Progress Section -->
+                <div class="progress-section hidden" id="progress-section">
+                    <div class="progress-header">
+                        <h3>Processing Video...</h3>
+                        <button class="cancel-btn" id="cancel-btn">Cancel</button>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progress-fill"></div>
+                    </div>
+                    <div class="progress-info">
+                        <span id="progress-text">0%</span>
+                        <span id="progress-time">Calculating...</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Settings Tab -->
+            <div class="tab-content" id="settings-tab">
+                <div class="content-header">
+                    <h1>Settings</h1>
+                    <p>Configure Frame Evolve preferences</p>
+                </div>
+                <div class="settings-grid">
+                    <div class="setting-card">
+                        <h3>Default Quality</h3>
+                        <select id="default-quality">
+                            <option value="high">High</option>
+                            <option value="ultra">Ultra</option>
+                            <option value="lossless">Lossless</option>
+                        </select>
+                    </div>
+                    <div class="setting-card">
+                        <h3>Default Scale Factor</h3>
+                        <select id="default-scale">
+                            <option value="2">2x</option>
+                            <option value="3">3x</option>
+                            <option value="4">4x</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- About Tab -->
+            <div class="tab-content" id="about-tab">
+                <div class="content-header">
+                    <h1>About Frame Evolve</h1>
+                    <p>Professional video upscaling and enhancement</p>
+                </div>
+                <div class="about-content">
+                    <div class="feature-grid">
+                        <div class="feature-card">
+                            <h3>🎥 Video Enhancement</h3>
+                            <p>Advanced upscaling with multiple algorithms</p>
+                        </div>
+                        <div class="feature-card">
+                            <h3>⚡ Fast Processing</h3>
+                            <p>Hardware-accelerated video processing</p>
+                        </div>
+                        <div class="feature-card">
+                            <h3>🎨 Professional Quality</h3>
+                            <p>Cinema-grade enhancement options</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/core/App.js"></script>
+    <script src="js/components/TitleBar.js"></script>
+    <script src="js/components/Navigation.js"></script>
+    <script src="js/components/VideoUpload.js"></script>
+    <script src="js/components/VideoProcessor.js"></script>
+    <script src="js/utils/Utils.js"></script>
+</body>
+</html>
