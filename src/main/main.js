@@ -1,5 +1,5 @@
 /**
- * Frame Evolve - Main Process Entry Point (Fixed)
+ * Frame Evolve - Main Process with Splash Screen
  */
 
 const { app, BrowserWindow } = require('electron');
@@ -47,20 +47,56 @@ class FrameEvolveApp {
 
   async onReady() {
     try {
-      this.logger.info('App ready, initializing managers...');
+      this.logger.info('App ready, initializing with splash screen...');
       
+      // Initialize managers
       this.windowManager = new WindowManager(this.configManager);
       this.menuManager = new MenuManager();
-      this.ipcManager = new IPCManager(this.configManager); // Pass config manager
+      this.ipcManager = new IPCManager(this.configManager);
 
+      // Show splash screen first
+      await this.windowManager.createSplashScreen();
+      
+      // Simulate initialization time (adjust as needed)
+      await this.initializeApp();
+      
+      // Create main window (this will auto-close splash when ready)
       await this.windowManager.createMainWindow();
+      
+      // Setup application menu
       this.menuManager.setupMenu();
       
       this.logger.info('Frame Evolve initialized successfully');
     } catch (error) {
       this.logger.error('Failed to initialize app:', error);
+      // Close splash on error
+      if (this.windowManager) {
+        this.windowManager.closeSplash();
+      }
       app.quit();
     }
+  }
+
+  /**
+   * Simulate app initialization with realistic timing
+   */
+  async initializeApp() {
+    // Simulate various initialization steps
+    const steps = [
+      { name: 'Loading configuration', delay: 200 },
+      { name: 'Checking FFmpeg availability', delay: 300 },
+      { name: 'Initializing services', delay: 400 },
+      { name: 'Loading user preferences', delay: 200 },
+      { name: 'Preparing interface', delay: 300 }
+    ];
+
+    for (const step of steps) {
+      this.logger.info(`Initialization: ${step.name}`);
+      await new Promise(resolve => setTimeout(resolve, step.delay));
+    }
+
+    // Additional delay to show the splash screen properly
+    await new Promise(resolve => setTimeout(resolve, 500));
   }
 
   onWindowAllClosed() {
@@ -71,13 +107,19 @@ class FrameEvolveApp {
 
   onActivate() {
     if (BrowserWindow.getAllWindows().length === 0) {
-      this.windowManager?.createMainWindow();
+      // If no windows, start with splash again
+      this.onReady();
     }
   }
 
   onBeforeQuit() {
     this.logger.info('Frame Evolve shutting down...');
     this.configManager?.save();
+    
+    // Ensure splash is closed
+    if (this.windowManager) {
+      this.windowManager.closeSplash();
+    }
   }
 }
 

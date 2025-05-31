@@ -28,3 +28,5 @@ logs/
 *.pid
 *.seed
 *.pid.lock
+
+package.json.bak
