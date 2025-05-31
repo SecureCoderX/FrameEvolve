@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # FrameEvolve
 =======
 # 🎥 Frame Evolve
@@ -483,4 +482,3 @@ This software is provided "as-is" for educational and personal enhancement purpo
 *Enhance your memories, not copyrighted content*
 
 </div>
->>>>>>> 362da41 (🎥 Initial commit: Frame Evolve - Professional Video Upscaler)
