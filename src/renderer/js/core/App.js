@@ -1,5 +1,5 @@
 /**
- * Frame Evolve - Enhanced App with Better Processing Feedback
+ * Frame Evolve - Enhanced Application Controller with Settings Integration
  */
 
 class FrameEvolveApp {
@@ -10,14 +10,17 @@ class FrameEvolveApp {
       settings: {}
     };
     
+    this.components = {};
     this.init();
   }
 
   async init() {
     try {
+      await this.initializeComponents();
       await this.loadSettings();
       this.setupEventListeners();
       this.setupElectronListeners();
+      this.applyInitialSettings();
       
       console.log('Frame Evolve initialized successfully');
     } catch (error) {
@@ -25,29 +28,42 @@ class FrameEvolveApp {
     }
   }
 
+  async initializeComponents() {
+    // Initialize Settings component first
+    this.components.settings = new Settings();
+    
+    // Wait for settings to load before applying defaults
+    await this.components.settings.init();
+  }
+
   async loadSettings() {
     try {
-      this.state.settings = await window.electronAPI.settings.getAll();
-      this.applySettings();
+      this.state.settings = this.components.settings.getSettings();
+      console.log('App settings loaded:', this.state.settings);
     } catch (error) {
-      console.error('Failed to load settings:', error);
+      console.error('Failed to load app settings:', error);
       this.state.settings = {};
     }
   }
 
-  applySettings() {
-    const defaultQuality = this.state.settings.defaultQuality || 'high'; // Changed default to 'high'
-    const defaultScale = this.state.settings.defaultScale || '2'; // Changed default to '2'
-    
-    const qualitySelect = document.getElementById('default-quality');
-    const scaleSelect = document.getElementById('default-scale');
-    const outputQualitySelect = document.getElementById('output-quality');
-    const scaleFactorSelect = document.getElementById('scale-factor');
-    
-    if (qualitySelect) qualitySelect.value = defaultQuality;
-    if (scaleSelect) scaleSelect.value = defaultScale;
-    if (outputQualitySelect) outputQualitySelect.value = defaultQuality;
-    if (scaleFactorSelect) scaleFactorSelect.value = defaultScale;
+  applyInitialSettings() {
+    // Apply default values to enhancement controls
+    const scaleFactor = this.state.settings.defaultScaleFactor || '2';
+    const enhancementMode = this.state.settings.defaultEnhancementMode || 'sharp';
+    const outputQuality = this.state.settings.defaultOutputQuality || 'high';
+    const noiseReduction = this.state.settings.defaultNoiseReduction || 50;
+
+    // Set enhancement control defaults
+    this.setSelectValue('scale-factor', scaleFactor);
+    this.setSelectValue('enhancement-mode', enhancementMode);
+    this.setSelectValue('output-quality', outputQuality);
+    this.setRangeValue('noise-reduction', noiseReduction);
+
+    // Apply theme
+    const theme = this.state.settings.appTheme || 'dark';
+    this.applyTheme(theme);
+
+    console.log('Initial settings applied to UI');
   }
 
   setupEventListeners() {
@@ -73,6 +89,23 @@ class FrameEvolveApp {
     });
 
     // File upload
+    this.setupFileUploadListeners();
+
+    // Enhancement controls with settings awareness
+    this.setupEnhancementControlListeners();
+
+    // Process button
+    document.getElementById('process-btn')?.addEventListener('click', () => {
+      this.startProcessing();
+    });
+
+    // Cancel button
+    document.getElementById('cancel-btn')?.addEventListener('click', () => {
+      this.cancelProcessing();
+    });
+  }
+
+  setupFileUploadListeners() {
     const uploadArea = document.getElementById('upload-area');
     const browseBtn = document.getElementById('browse-btn');
 
@@ -107,8 +140,10 @@ class FrameEvolveApp {
         this.selectVideoFile();
       });
     }
+  }
 
-    // Enhancement controls
+  setupEnhancementControlListeners() {
+    // Noise reduction slider
     const noiseReduction = document.getElementById('noise-reduction');
     const noiseValue = document.getElementById('noise-value');
     
@@ -118,24 +153,35 @@ class FrameEvolveApp {
       });
     }
 
-    // Process button
-    document.getElementById('process-btn')?.addEventListener('click', () => {
-      this.startProcessing();
+    // Save current settings as new defaults when changed
+    ['scale-factor', 'enhancement-mode', 'output-quality'].forEach(id => {
+      document.getElementById(id)?.addEventListener('change', () => {
+        this.saveCurrentAsDefaults();
+      });
     });
 
-    // Cancel button
-    document.getElementById('cancel-btn')?.addEventListener('click', () => {
-      this.cancelProcessing();
+    document.getElementById('noise-reduction')?.addEventListener('change', () => {
+      this.saveCurrentAsDefaults();
     });
+  }
 
-    // Settings
-    document.getElementById('default-quality')?.addEventListener('change', (e) => {
-      this.saveSetting('defaultQuality', e.target.value);
-    });
-
-    document.getElementById('default-scale')?.addEventListener('change', (e) => {
-      this.saveSetting('defaultScale', e.target.value);
-    });
+  async saveCurrentAsDefaults() {
+    try {
+      const currentSettings = this.getEnhancementOptions();
+      
+      // Update settings component
+      await this.components.settings.updateSetting('defaultScaleFactor', currentSettings.scaleFactor.toString());
+      await this.components.settings.updateSetting('defaultEnhancementMode', currentSettings.enhancementMode);
+      await this.components.settings.updateSetting('defaultOutputQuality', currentSettings.outputQuality);
+      await this.components.settings.updateSetting('defaultNoiseReduction', currentSettings.noiseReduction);
+      
+      // Update local state
+      this.state.settings = this.components.settings.getSettings();
+      
+      console.log('Current settings saved as defaults');
+    } catch (error) {
+      console.error('Failed to save current settings as defaults:', error);
+    }
   }
 
   setupElectronListeners() {
@@ -203,7 +249,10 @@ class FrameEvolveApp {
       this.showProcessingRecommendations(fileInfo);
       
       console.log('File selected:', filePath);
-      this.showNotification('Video file loaded successfully', 'success');
+      
+      if (this.state.settings.showNotifications) {
+        this.showNotification('Video file loaded successfully', 'success');
+      }
     } catch (error) {
       console.error('Failed to load file:', error);
       this.showNotification('Failed to load video file', 'error');
@@ -219,17 +268,20 @@ class FrameEvolveApp {
       const outputHeight = height * scaleFactor;
       
       let recommendation = '';
+      let type = 'info';
       
       if (outputWidth > 3840 || outputHeight > 2160) {
         recommendation = `⚠️ Warning: ${scaleFactor}x upscaling will create a ${outputWidth}x${outputHeight} video, which may be too large. Consider 2x scaling.`;
+        type = 'warning';
       } else if (scaleFactor >= 3 && (width >= 1920 || height >= 1080)) {
         recommendation = `💡 Tip: ${scaleFactor}x scaling of HD video will take significant time and storage.`;
       } else {
         recommendation = `✅ Good: ${scaleFactor}x scaling will create a ${outputWidth}x${outputHeight} video.`;
       }
       
-      // Show recommendation in UI
-      this.showNotification(recommendation, outputWidth > 3840 ? 'warning' : 'info');
+      if (this.state.settings.showNotifications) {
+        this.showNotification(recommendation, type);
+      }
     }
   }
 
@@ -290,14 +342,26 @@ class FrameEvolveApp {
     }
 
     try {
-      const outputPath = await window.electronAPI.file.selectOutput();
+      // Use default output path if set, otherwise prompt
+      let outputPath = this.state.settings.defaultOutputPath;
+      
       if (!outputPath) {
-        return;
+        outputPath = await window.electronAPI.file.selectOutput();
+        if (!outputPath) return;
+      } else {
+        // Generate filename in default directory
+        const filename = `enhanced-${Date.now()}.mp4`;
+        outputPath = `${outputPath}/${filename}`;
       }
 
       const options = this.getEnhancementOptions();
       options.inputPath = this.state.currentFile.path;
       options.outputPath = outputPath;
+
+      // Apply performance settings
+      options.priority = this.state.settings.processingPriority;
+      options.memoryLimit = this.state.settings.memoryLimit;
+      options.timeout = this.state.settings.processingTimeout * 60 * 1000; // Convert to ms
 
       this.state.isProcessing = true;
       this.showProgress();
@@ -372,13 +436,16 @@ class FrameEvolveApp {
       await window.electronAPI.video.cancel();
       this.state.isProcessing = false;
       this.hideProgress();
-      this.showNotification('Processing cancelled', 'warning');
+      
+      if (this.state.settings.showNotifications) {
+        this.showNotification('Processing cancelled', 'warning');
+      }
     } catch (error) {
       console.error('Failed to cancel processing:', error);
     }
   }
 
-  handleProcessComplete(result) {
+  async handleProcessComplete(result) {
     this.state.isProcessing = false;
     this.hideProgress();
     
@@ -387,7 +454,18 @@ class FrameEvolveApp {
       message += ` Output size: ${result.outputSizeFormatted}`;
     }
     
-    this.showNotification(message, 'success');
+    if (this.state.settings.showNotifications) {
+      this.showNotification(message, 'success');
+    }
+    
+    // Auto-open output folder if enabled
+    if (this.state.settings.autoOpenOutput && result.outputPath) {
+      try {
+        await window.electronAPI.system.openPath(result.outputPath);
+      } catch (error) {
+        console.error('Failed to open output folder:', error);
+      }
+    }
     
     console.log('Processing completed:', result);
   }
@@ -395,19 +473,69 @@ class FrameEvolveApp {
   handleProcessError(error) {
     this.state.isProcessing = false;
     this.hideProgress();
-    this.showNotification(error, 'error');
+    
+    if (this.state.settings.showNotifications) {
+      this.showNotification(error, 'error');
+    }
     
     console.error('Processing error:', error);
   }
 
-  async saveSetting(key, value) {
-    try {
-      await window.electronAPI.settings.set(key, value);
-      this.state.settings[key] = value;
-      console.log(`Setting saved: ${key} = ${value}`);
-    } catch (error) {
-      console.error('Failed to save setting:', error);
+  // Helper methods
+  setSelectValue(id, value) {
+    const element = document.getElementById(id);
+    if (element) {
+      element.value = value;
     }
+  }
+
+  setRangeValue(id, value) {
+    const element = document.getElementById(id);
+    if (element) {
+      element.value = value;
+      // Update display
+      const displayElement = document.getElementById('noise-value');
+      if (displayElement) {
+        displayElement.textContent = value + '%';
+      }
+    }
+  }
+
+  applyTheme(theme) {
+    document.body.className = `theme-${theme}`;
+    
+    // Update CSS custom properties based on theme
+    const root = document.documentElement;
+    
+    switch (theme) {
+      case 'light':
+        root.style.setProperty('--primary-bg', '#ffffff');
+        root.style.setProperty('--secondary-bg', '#f8fafc');
+        root.style.setProperty('--tertiary-bg', '#e2e8f0');
+        root.style.setProperty('--text-primary', '#1e293b');
+        root.style.setProperty('--text-secondary', '#475569');
+        root.style.setProperty('--text-muted', '#64748b');
+        root.style.setProperty('--border-color', '#cbd5e1');
+        break;
+      case 'auto':
+        // Detect system theme
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        this.applyTheme(prefersDark ? 'dark' : 'light');
+        return;
+      case 'dark':
+      default:
+        // Reset to default dark theme
+        root.style.setProperty('--primary-bg', '#0f0f0f');
+        root.style.setProperty('--secondary-bg', '#1a1a1a');
+        root.style.setProperty('--tertiary-bg', '#2d2d2d');
+        root.style.setProperty('--text-primary', '#ffffff');
+        root.style.setProperty('--text-secondary', '#a1a1aa');
+        root.style.setProperty('--text-muted', '#71717a');
+        root.style.setProperty('--border-color', '#404040');
+        break;
+    }
+    
+    console.log(`Applied theme: ${theme}`);
   }
 
   showNotification(message, type = 'info') {
@@ -422,10 +550,38 @@ class FrameEvolveApp {
     setTimeout(() => {
       notification.classList.remove('show');
       setTimeout(() => notification.remove(), 300);
-    }, type === 'error' ? 8000 : 5000); // Show errors longer
+    }, type === 'error' ? 8000 : 5000);
+  }
+
+  // Public methods for other components
+  getAppSettings() {
+    return { ...this.state.settings };
+  }
+
+  async updateAppSetting(key, value) {
+    try {
+      await this.components.settings.updateSetting(key, value);
+      this.state.settings = this.components.settings.getSettings();
+      
+      // Apply certain settings immediately
+      if (key === 'appTheme') {
+        this.applyTheme(value);
+      }
+      
+      return true;
+    } catch (error) {
+      console.error(`Failed to update app setting ${key}:`, error);
+      return false;
+    }
+  }
+
+  refreshSettings() {
+    this.state.settings = this.components.settings.getSettings();
+    this.applyInitialSettings();
   }
 }
 
+// Initialize the application
 document.addEventListener('DOMContentLoaded', () => {
   window.frameEvolveApp = new FrameEvolveApp();
 });

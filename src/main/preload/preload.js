@@ -1,5 +1,5 @@
 /**
- * Preload Script - Complete Bridge
+ * Preload Script - Enhanced with Settings API
  */
 
 const { contextBridge, ipcRenderer } = require('electron');
@@ -17,6 +17,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   file: {
     selectVideo: () => ipcRenderer.invoke('file:select-video'),
     selectOutput: () => ipcRenderer.invoke('file:select-output'),
+    selectOutputDirectory: () => ipcRenderer.invoke('file:select-output-directory'),
     getInfo: (filePath) => ipcRenderer.invoke('file:get-info', filePath),
     validate: (filePath) => ipcRenderer.invoke('file:validate', filePath)
   },
@@ -28,11 +29,24 @@ contextBridge.exposeInMainWorld('electronAPI', {
     getMetadata: (filePath) => ipcRenderer.invoke('video:get-metadata', filePath)
   },
 
-  // Settings
+  // Enhanced settings
   settings: {
     get: (key, defaultValue) => ipcRenderer.invoke('settings:get', key, defaultValue),
     set: (key, value) => ipcRenderer.invoke('settings:set', key, value),
-    getAll: () => ipcRenderer.invoke('settings:get-all')
+    getAll: () => ipcRenderer.invoke('settings:get-all'),
+    reset: () => ipcRenderer.invoke('settings:reset'),
+    export: () => ipcRenderer.invoke('settings:export'),
+    import: () => ipcRenderer.invoke('settings:import')
+  },
+
+  // Enhanced system info
+  system: {
+    getInfo: () => ipcRenderer.invoke('system:info'),
+    getVersion: () => ipcRenderer.invoke('system:version'),
+    openPath: (filePath) => ipcRenderer.invoke('system:open-path', filePath),
+    getDefaultPaths: () => ipcRenderer.invoke('system:get-default-paths'),
+    getBatteryStatus: () => ipcRenderer.invoke('system:battery-status'),
+    getPerformance: () => ipcRenderer.invoke('system:performance')
   },
 
   // Event listeners
@@ -41,7 +55,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
       'video:progress',
       'video:complete',
       'video:error',
-      'app:theme-changed'
+      'app:theme-changed',
+      'settings:updated'
     ];
     
     if (validChannels.includes(channel)) {
@@ -51,13 +66,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
   off: (channel, callback) => {
     ipcRenderer.removeListener(channel, callback);
-  },
-
-  // System info
-  system: {
-    getInfo: () => ipcRenderer.invoke('system:info'),
-    getVersion: () => ipcRenderer.invoke('system:version')
   }
 });
 
-console.log('Frame Evolve preload script loaded');
+console.log('Frame Evolve preload script loaded with enhanced API');
